@@ -7,6 +7,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+import com.carvajal.wishlist.exception.ResourceNotFoundException;
+
 @Service
 public class ProductService {
 
@@ -22,7 +24,8 @@ public class ProductService {
 
     public Product findById(Long id) {
         return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found with id: " + id));
+                .orElseThrow(() ->
+                        new ResourceNotFoundException("Product not found with id: " + id));
     }
 
     public Product create(ProductDTO dto) {
