@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 import com.carvajal.wishlist.exception.ResourceNotFoundException;
+import com.carvajal.wishlist.exception.StockNotAvailableException;
 
 @Service
 public class ProductService {
@@ -62,6 +63,13 @@ public class ProductService {
 
     public boolean hasStock(Long productId, int quantity) {
         Product product = findById(productId);
-        return product.getStock() >= quantity;
+
+        if (product.getStock() < quantity) {
+            throw new StockNotAvailableException(
+                    "Stock not available for product with id: " + productId
+            );
+        }
+
+        return true;
     }
 }
