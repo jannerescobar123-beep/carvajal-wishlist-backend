@@ -2,6 +2,7 @@ package com.carvajal.wishlist.entity;
 
 import jakarta.persistence.*;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,7 +17,7 @@ public class WishlistItem {
 
     private String url;
 
-    private Double price;
+    private BigDecimal price;
 
     private Boolean purchased = false;
 
@@ -24,6 +25,15 @@ public class WishlistItem {
     private LocalDateTime createdAt;
 
     public WishlistItem() {
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+
+        if (purchased == null) {
+            purchased = false;
+        }
     }
 
     public Long getId() {
@@ -50,11 +60,11 @@ public class WishlistItem {
         this.url = url;
     }
 
-    public Double getPrice() {
+    public BigDecimal getPrice() {
         return price;
     }
 
-    public void setPrice(Double price) {
+    public void setPrice(BigDecimal price) {
         this.price = price;
     }
 
