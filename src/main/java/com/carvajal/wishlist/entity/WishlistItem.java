@@ -1,7 +1,6 @@
 package com.carvajal.wishlist.entity;
 
 import jakarta.persistence.*;
-
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -14,11 +13,8 @@ public class WishlistItem {
     private Long id;
 
     private String name;
-
     private String url;
-
     private BigDecimal price;
-
     private Boolean purchased = false;
 
     @Column(name = "created_at")
