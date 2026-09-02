@@ -14,6 +14,6 @@ public class OpenApiConfig {
                 .info(new Info()
                         .title("Carvajal Wishlist API")
                         .version("1.0.0")
-                        .description("API REST para la gestión de listas de deseos"));
+                        .description("API REST para la gestión de productos y wishlist."));
     }
 }
