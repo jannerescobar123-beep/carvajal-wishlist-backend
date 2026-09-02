@@ -2,6 +2,7 @@ package com.carvajal.wishlist.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -18,6 +19,20 @@ public class SecurityConfig {
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(auth -> auth
+                        // Swagger / OpenAPI
+                        .requestMatchers(
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/v3/api-docs/**"
+                        ).permitAll()
+
+                        // Consulta pública de productos
+                        .requestMatchers(
+                                HttpMethod.GET,
+                                "/api/products/**"
+                        ).permitAll()
+
+                        // Todo lo demás requiere autenticación
                         .anyRequest().authenticated()
                 )
                 .httpBasic(httpBasic -> {});

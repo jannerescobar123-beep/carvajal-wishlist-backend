@@ -30,6 +30,16 @@ public class ProductController {
         return ResponseEntity.ok(productService.findById(id));
     }
 
+    @GetMapping("/{id}/stock")
+    public ResponseEntity<Boolean> hasStock(
+            @PathVariable Long id,
+            @RequestParam(defaultValue = "1") int quantity) {
+
+        return ResponseEntity.ok(
+                productService.hasStock(id, quantity)
+        );
+    }
+
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
     public ResponseEntity<ProductDTO> create(

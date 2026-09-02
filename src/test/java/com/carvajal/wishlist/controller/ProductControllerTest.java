@@ -48,7 +48,6 @@ class ProductControllerTest {
 
 
     @Test
-    @WithMockUser
     void findAll_shouldReturnProducts() throws Exception {
 
         ProductDTO product = createProduct(1L, "Laptop");
@@ -69,7 +68,6 @@ class ProductControllerTest {
 
 
     @Test
-    @WithMockUser
     void findById_shouldReturnProduct() throws Exception {
 
         ProductDTO product = createProduct(1L, "Laptop");
@@ -243,5 +241,20 @@ class ProductControllerTest {
         product.setIsActive(true);
 
         return product;
+    }
+
+    @Test
+    void hasStock_shouldReturnTrueWhenStockIsAvailable()
+            throws Exception {
+
+        when(productService.hasStock(1L, 3))
+                .thenReturn(true);
+
+        mockMvc.perform(
+                        get("/api/products/1/stock")
+                                .param("quantity", "3")
+                )
+                .andExpect(status().isOk())
+                .andExpect(content().string("true"));
     }
 }
