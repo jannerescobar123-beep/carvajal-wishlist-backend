@@ -1,11 +1,11 @@
 package com.carvajal.wishlist.controller;
 
 import com.carvajal.wishlist.dto.ProductDTO;
-import com.carvajal.wishlist.entity.Product;
 import com.carvajal.wishlist.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -21,29 +21,33 @@ public class ProductController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Product>> findAll() {
+    public ResponseEntity<List<ProductDTO>> findAll() {
         return ResponseEntity.ok(productService.findAll());
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Product> findById(@PathVariable Long id) {
+    public ResponseEntity<ProductDTO> findById(@PathVariable Long id) {
         return ResponseEntity.ok(productService.findById(id));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<Product> create(@Valid @RequestBody ProductDTO dto) {
-        return ResponseEntity.status(HttpStatus.CREATED)
+    public ResponseEntity<ProductDTO> create(
+            @Valid @RequestBody ProductDTO dto) {
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
                 .body(productService.create(dto));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @PutMapping("/{id}")
-    public ResponseEntity<Product> update(
+    public ResponseEntity<ProductDTO> update(
             @PathVariable Long id,
             @Valid @RequestBody ProductDTO dto) {
-
         return ResponseEntity.ok(productService.update(id, dto));
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         productService.delete(id);
