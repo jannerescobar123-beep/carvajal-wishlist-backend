@@ -65,28 +65,31 @@ public class WishlistService {
         wishlistRepository.deleteByUserIdAndProductId(userId, productId);
     }
 
+    private WishlistDTO mapToDTO(Wishlist w) {
+        Product p = w.getProduct();
+        boolean inStock = p.getIsActive() && p.getStock() >= w.getQuantity();
+        
+        return new WishlistDTO(
+            p.getId(), 
+            p.getName(), 
+            w.getQuantity(), 
+            p.getPrice(), 
+            inStock
+        );
+    }
+
     public List<WishlistDTO> getWishlist(Long userId) {
-        return wishlistRepository.findByUserId(userId).stream().map(w -> {
-            boolean inStock = true;
-            try {
-                productService.hasStock(w.getProduct().getId(), w.getQuantity());
-            } catch (Exception e) {
-                inStock = false;
-            }
-            return new WishlistDTO(w.getProduct().getId(), w.getProduct().getName(), w.getQuantity(), w.getProduct().getPrice(), inStock);
-        }).collect(Collectors.toList());
+        return wishlistRepository.findByUserId(userId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     public List<WishlistDTO> getWishlistHistory(Long userId) {
-        return wishlistRepository.findAllByUserIdOrderByCreatedAtDesc(userId).stream().map(w -> {
-            boolean inStock = true;
-            try {
-                productService.hasStock(w.getProduct().getId(), w.getQuantity());
-            } catch (Exception e) {
-                inStock = false;
-            }
-            return new WishlistDTO(w.getProduct().getId(), w.getProduct().getName(), w.getQuantity(), w.getProduct().getPrice(), inStock);
-        }).collect(Collectors.toList());
+        return wishlistRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
+                .stream()
+                .map(this::mapToDTO)
+                .collect(Collectors.toList());
     }
 
     public List<WishlistDTO> checkWishlistStock(Long userId) {
