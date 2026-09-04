@@ -22,7 +22,6 @@
 - [Reglas de Negocio](#-reglas-de-negocio)
 - [Variables de Entorno](#-variables-de-entorno)
 - [Documentación de la API (Swagger)](#-documentación-de-la-api-swagger)
-- [Flujo de Trabajo (GitFlow)](#-flujo-de-trabajo-gitflow)
 - [Contribuidores](#-contribuidores)
 
 ---
@@ -104,21 +103,6 @@ El sistema autogenera su propio manual interactivo usando el estándar OpenAPI v
 
 - **Interfaz Gráfica (Swagger UI):** `/swagger-ui.html`
 - **Esquema JSON (OpenAPI):** `/v3/api-docs`
-
----
-
-## 🔀 Flujo de Trabajo (GitFlow)
-
-El desarrollo del proyecto está rigurosamente estructurado bajo metodologías ágiles y control de versiones:
-
-1. **Ramas Principales:**
-   - `main`: Entorno de Producción estable.
-   - `develop-dev`: Entorno de Staging e integración de características.
-2. **Ramas de Trabajo (Features):**
-   - `feature/auth-security`, `feature/wishlist`, `feature/docker`
-   - Ramas de integración personal: `NombreApellidoDev` (Ej. `MichaelVeraDev`)
-3. **Estándar de Commits:** [Conventional Commits](https://www.conventionalcommits.org/):
-   - `feat(...)`, `fix(...)`, `docs(...)`
 
 ---
 
