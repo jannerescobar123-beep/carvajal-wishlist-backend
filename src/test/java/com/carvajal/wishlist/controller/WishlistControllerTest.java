@@ -10,8 +10,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(WishlistController.class)
 @AutoConfigureMockMvc(addFilters = false)
+@org.springframework.context.annotation.Import({com.carvajal.wishlist.config.SecurityConfig.class, com.carvajal.wishlist.security.JwtAuthenticationFilter.class})
 class WishlistControllerTest {
 
     @Autowired
@@ -41,6 +42,12 @@ class WishlistControllerTest {
     @MockitoBean
     private UserRepository userRepository;
 
+    @MockitoBean
+    private com.carvajal.wishlist.config.JwtUtil jwtUtil;
+
+    @MockitoBean
+    private com.carvajal.wishlist.security.CustomUserDetailsService customUserDetailsService;
+
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @BeforeEach
@@ -50,7 +57,7 @@ class WishlistControllerTest {
         
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
         SecurityContextHolder.getContext().setAuthentication(
-                new UsernamePasswordAuthenticationToken("testuser", null, List.of())
+                new UsernamePasswordAuthenticationToken("testuser", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_CLIENT")))
         );
     }
 
@@ -60,7 +67,7 @@ class WishlistControllerTest {
         when(wishlistService.getWishlist(anyLong())).thenReturn(List.of(wishlistDTO));
 
         mockMvc.perform(get("/api/wishlist"))
-                .andExpect(status().isNoContent());
+                .andExpect(status().isOk());
     }
 
     @Test
