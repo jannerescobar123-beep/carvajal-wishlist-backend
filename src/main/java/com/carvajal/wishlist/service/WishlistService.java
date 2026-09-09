@@ -148,9 +148,9 @@ public class WishlistService {
         wishlist.setQuantity(wishlistItemDTO.getQuantity());
         wishlist = wishlistRepository.save(wishlist);
 
-        // Registrar el historial real: cantidad anterior y nueva cantidad
-        recordWishlistHistory(userId, product, previousQuantity, "UPDATED_FROM");
-        recordWishlistHistory(userId, product, wishlist.getQuantity(), "UPDATED_TO");
+        // Registrar historial real en una sola entrada indicando antes->después
+        String action = String.format("UPDATED_FROM_%d_TO_%d", previousQuantity, wishlist.getQuantity());
+        recordWishlistHistory(userId, product, wishlist.getQuantity(), action);
 
         return new WishlistDTO(
                 product.getId(),
