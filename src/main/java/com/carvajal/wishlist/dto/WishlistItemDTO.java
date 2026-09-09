@@ -4,7 +4,7 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public class WishlistItemDTO {
-    @NotNull
+    // productId is optional for updates (path variable provides id)
     private Long productId;
     
     @NotNull

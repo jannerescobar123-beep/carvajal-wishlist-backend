@@ -51,6 +51,10 @@ public class WishlistService {
 
     @Transactional
     public WishlistDTO addToWishlist(Long userId, WishlistItemDTO wishlistItemDTO) {
+        if (wishlistItemDTO.getProductId() == null) {
+            throw new IllegalArgumentException("productId is required");
+        }
+
         Product product = productRepository.findById(wishlistItemDTO.getProductId())
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
@@ -144,8 +148,9 @@ public class WishlistService {
         wishlist.setQuantity(wishlistItemDTO.getQuantity());
         wishlist = wishlistRepository.save(wishlist);
 
-        // Registrar la nueva cantidad en el historial (cantidad actualizada)
-        recordWishlistHistory(userId, product, wishlist.getQuantity(), "UPDATED");
+        // Registrar el historial real: cantidad anterior y nueva cantidad
+        recordWishlistHistory(userId, product, previousQuantity, "UPDATED_FROM");
+        recordWishlistHistory(userId, product, wishlist.getQuantity(), "UPDATED_TO");
 
         return new WishlistDTO(
                 product.getId(),
