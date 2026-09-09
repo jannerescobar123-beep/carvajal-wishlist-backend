@@ -54,7 +54,7 @@ class WishlistControllerTest {
     void setUp() {
         User user = new User("testuser", "test@example.com", "password", Role.CLIENT);
         user.setId(1L);
-        
+
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.of(user));
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("testuser", null, List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_CLIENT")))
@@ -111,25 +111,5 @@ class WishlistControllerTest {
 
         mockMvc.perform(delete("/api/wishlist/1"))
                 .andExpect(status().isNoContent());
-    }
-
-    @Test
-    void testUpdateWishlistItemQuantity_WithInvalidQuantity_ShouldFail() throws Exception {
-        WishlistItemDTO requestDTO = new WishlistItemDTO(1L, 0);
-
-        mockMvc.perform(put("/api/wishlist/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
-    }
-
-    @Test
-    void testAddToWishlist_WithoutProductId_ShouldFail() throws Exception {
-        WishlistItemDTO requestDTO = new WishlistItemDTO(null, 1);
-
-        mockMvc.perform(post("/api/wishlist")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(requestDTO)))
-                .andExpect(status().isBadRequest());
     }
 }

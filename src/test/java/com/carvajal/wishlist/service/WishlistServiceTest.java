@@ -11,6 +11,7 @@ import com.carvajal.wishlist.exception.ResourceNotFoundException;
 import com.carvajal.wishlist.exception.StockNotAvailableException;
 import com.carvajal.wishlist.repository.ProductRepository;
 import com.carvajal.wishlist.repository.UserRepository;
+import com.carvajal.wishlist.repository.WishlistHistoryRepository;
 import com.carvajal.wishlist.repository.WishlistRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +27,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -42,6 +44,9 @@ class WishlistServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private WishlistHistoryRepository wishlistHistoryRepository;
 
     @InjectMocks
     private WishlistService wishlistService;
@@ -73,6 +78,7 @@ class WishlistServiceTest {
         when(productService.hasStock(anyLong(), anyInt())).thenReturn(true);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(wishlistRepository.save(any(Wishlist.class))).thenReturn(wishlist);
+        when(wishlistHistoryRepository.save(any())).thenReturn(null);
 
         WishlistDTO response = wishlistService.addToWishlist(1L, wishlistItemDTO);
 
@@ -120,10 +126,48 @@ class WishlistServiceTest {
 
     @Test
     void testGetWishlistHistory_Success() {
-        when(wishlistRepository.findAllByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(wishlist));
+        when(wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of());
 
         List<WishlistDTO> response = wishlistService.getWishlistHistory(1L);
 
-        assertFalse(response.isEmpty());
+        assertNotNull(response);
+        assertTrue(response.isEmpty());
+    }
+
+    @Test
+    void testUpdateWishlistItemQuantity_Success() {
+        when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.of(wishlist));
+        when(productService.hasStock(anyLong(), eq(3))).thenReturn(true);
+        when(wishlistRepository.save(any(Wishlist.class))).thenAnswer(invocation -> {
+            Wishlist saved = invocation.getArgument(0);
+            saved.setQuantity(3);
+            return saved;
+        });
+
+        WishlistDTO response = wishlistService.updateWishlistItemQuantity(1L, 1L, new WishlistItemDTO(1L, 3));
+
+        assertNotNull(response);
+        assertEquals(3, response.getQuantity());
+        verify(wishlistHistoryRepository, times(1)).save(any());
+    }
+
+    @Test
+    void testGetWishlistHistory_MapsHistoryEntries() {
+        com.carvajal.wishlist.entity.WishlistHistory history = new com.carvajal.wishlist.entity.WishlistHistory(
+                1L,
+                1L,
+                "Test Product",
+                3,
+                BigDecimal.valueOf(100),
+                "UPDATED_FROM_2_TO_3"
+        );
+        when(wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(history));
+        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+
+        List<WishlistDTO> response = wishlistService.getWishlistHistory(1L);
+
+        assertEquals(1, response.size());
+        assertEquals(3, response.get(0).getQuantity());
+        assertTrue(response.get(0).getInStock());
     }
 }
