@@ -1,21 +1,19 @@
-# Etapa 1: construir la aplicación
-FROM maven:3.9-eclipse-temurin-21 AS build
+# Usar imagen base de Java 21
+FROM eclipse-temurin:21-jdk-jammy
 
+# Directorio de trabajo
 WORKDIR /app
 
-COPY pom.xml .
+# Copiar pom.xml y descargar dependencias
+COPY pom.xml mvnw ./
+COPY .mvn .mvn
+RUN ./mvnw dependency:go-offline
+
+# Copiar código fuente
 COPY src ./src
 
-RUN mvn clean package -DskipTests
+# Compilar la aplicación
+RUN ./mvnw package -DskipTests
 
-
-# Etapa 2: ejecutar la aplicación
-FROM eclipse-temurin:21-jre
-
-WORKDIR /app
-
-COPY --from=build /app/target/*.jar app.jar
-
-EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Ejecutar la aplicación
+ENTRYPOINT ["java", "-jar", "/app/target/wishlist-0.0.1-SNAPSHOT.jar"]
