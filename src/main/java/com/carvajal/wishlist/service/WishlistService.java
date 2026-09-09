@@ -5,11 +5,13 @@ import com.carvajal.wishlist.dto.WishlistItemDTO;
 import com.carvajal.wishlist.entity.Product;
 import com.carvajal.wishlist.entity.User;
 import com.carvajal.wishlist.entity.Wishlist;
+import com.carvajal.wishlist.entity.WishlistHistory;
 import com.carvajal.wishlist.exception.ProductAlreadyInWishlistException;
 import com.carvajal.wishlist.exception.ResourceNotFoundException;
 import com.carvajal.wishlist.exception.StockNotAvailableException;
 import com.carvajal.wishlist.repository.ProductRepository;
 import com.carvajal.wishlist.repository.UserRepository;
+import com.carvajal.wishlist.repository.WishlistHistoryRepository;
 import com.carvajal.wishlist.repository.WishlistRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,13 +26,27 @@ public class WishlistService {
     private final ProductRepository productRepository;
     private final ProductService productService;
     private final UserRepository userRepository;
+    private final WishlistHistoryRepository wishlistHistoryRepository;
 
     public WishlistService(WishlistRepository wishlistRepository, ProductRepository productRepository, 
-                           ProductService productService, UserRepository userRepository) {
+                           ProductService productService, UserRepository userRepository,
+                           WishlistHistoryRepository wishlistHistoryRepository) {
         this.wishlistRepository = wishlistRepository;
         this.productRepository = productRepository;
         this.productService = productService;
         this.userRepository = userRepository;
+        this.wishlistHistoryRepository = wishlistHistoryRepository;
+    }
+
+    private void recordWishlistHistory(Long userId, Product product, Integer quantity, String action) {
+        wishlistHistoryRepository.save(new WishlistHistory(
+                userId,
+                product.getId(),
+                product.getName(),
+                quantity,
+                product.getPrice(),
+                action
+        ));
     }
 
     @Transactional
@@ -45,8 +61,7 @@ public class WishlistService {
         if (wishlistRepository.findByUserIdAndProductId(userId, product.getId()).isPresent()) {
             throw new ProductAlreadyInWishlistException("Product already in wishlist");
         }
-        
-        // Throw StockNotAvailableException if not enough stock
+
         productService.hasStock(product.getId(), wishlistItemDTO.getQuantity());
 
         User user = userRepository.findById(userId)
@@ -54,14 +69,18 @@ public class WishlistService {
 
         Wishlist wishlist = new Wishlist(user, product, wishlistItemDTO.getQuantity());
         wishlist = wishlistRepository.save(wishlist);
+        recordWishlistHistory(userId, product, wishlist.getQuantity(), "ADDED");
 
         return new WishlistDTO(product.getId(), product.getName(), wishlist.getQuantity(), product.getPrice(), true);
     }
 
     @Transactional
     public void removeFromWishlist(Long userId, Long productId) {
-        wishlistRepository.findByUserIdAndProductId(userId, productId)
+        Wishlist wishlist = wishlistRepository.findByUserIdAndProductId(userId, productId)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not in wishlist"));
+
+        Product product = wishlist.getProduct();
+        recordWishlistHistory(userId, product, wishlist.getQuantity(), "REMOVED");
         wishlistRepository.deleteByUserIdAndProductId(userId, productId);
     }
 
@@ -85,14 +104,55 @@ public class WishlistService {
                 .collect(Collectors.toList());
     }
 
+    private WishlistDTO mapHistoryToDTO(WishlistHistory history) {
+        Product product = productRepository.findById(history.getProductId()).orElse(null);
+        boolean inStock = product != null && product.getIsActive() && product.getStock() >= history.getQuantity();
+
+        return new WishlistDTO(
+                history.getProductId(),
+                history.getProductName(),
+                history.getQuantity(),
+                product != null ? product.getPrice() : history.getPrice(),
+                inStock
+        );
+    }
+
     public List<WishlistDTO> getWishlistHistory(Long userId) {
-        return wishlistRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
+        return wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
                 .stream()
-                .map(this::mapToDTO)
+                .map(this::mapHistoryToDTO)
                 .collect(Collectors.toList());
     }
 
     public List<WishlistDTO> checkWishlistStock(Long userId) {
         return getWishlist(userId);
+    }
+
+    @Transactional
+    public WishlistDTO updateWishlistItemQuantity(Long userId, Long productId, WishlistItemDTO wishlistItemDTO) {
+        if (wishlistItemDTO == null || wishlistItemDTO.getQuantity() == null || wishlistItemDTO.getQuantity() <= 0) {
+            throw new IllegalArgumentException("Quantity must be greater than zero");
+        }
+
+        Wishlist wishlist = wishlistRepository.findByUserIdAndProductId(userId, productId)
+                .orElseThrow(() -> new ResourceNotFoundException("Product not in wishlist"));
+
+        Product product = wishlist.getProduct();
+        productService.hasStock(product.getId(), wishlistItemDTO.getQuantity());
+
+        int previousQuantity = wishlist.getQuantity();
+        wishlist.setQuantity(wishlistItemDTO.getQuantity());
+        wishlist = wishlistRepository.save(wishlist);
+
+        // Registrar la nueva cantidad en el historial (cantidad actualizada)
+        recordWishlistHistory(userId, product, wishlist.getQuantity(), "UPDATED");
+
+        return new WishlistDTO(
+                product.getId(),
+                product.getName(),
+                wishlist.getQuantity(),
+                product.getPrice(),
+                product.getIsActive() && product.getStock() >= wishlist.getQuantity()
+        );
     }
 }
