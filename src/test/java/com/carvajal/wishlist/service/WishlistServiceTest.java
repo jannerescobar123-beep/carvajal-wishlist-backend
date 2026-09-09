@@ -111,7 +111,6 @@ class WishlistServiceTest {
     @Test
     void testGetWishlist_Success() {
         when(wishlistRepository.findByUserId(anyLong())).thenReturn(List.of(wishlist));
-        when(productService.hasStock(anyLong(), anyInt())).thenReturn(true);
 
         List<WishlistDTO> response = wishlistService.getWishlist(1L);
 
@@ -122,7 +121,6 @@ class WishlistServiceTest {
     @Test
     void testGetWishlistHistory_Success() {
         when(wishlistRepository.findAllByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(wishlist));
-        when(productService.hasStock(anyLong(), anyInt())).thenReturn(true);
 
         List<WishlistDTO> response = wishlistService.getWishlistHistory(1L);
 
