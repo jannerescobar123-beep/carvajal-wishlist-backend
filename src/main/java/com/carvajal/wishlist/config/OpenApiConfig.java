@@ -22,18 +22,18 @@ public class OpenApiConfig {
                         ))
                 .addSecurityItem(
                         new SecurityRequirement()
-                                .addList("basicAuth")
+                                .addList("bearerAuth")
                 )
                 .components(
                         new Components()
                                 .addSecuritySchemes(
-                                        "basicAuth",
+                                        "bearerAuth",
                                         new SecurityScheme()
                                                 .type(SecurityScheme.Type.HTTP)
-                                                .scheme("basic")
+                                                .scheme("bearer")
+                                                .bearerFormat("JWT")
                                                 .description(
-                                                        "Autenticación HTTP Basic. "
-                                                                + "Usuario demo: admin / admin123"
+                                                        "Autenticación mediante token JWT."
                                                 )
                                 )
                 );
