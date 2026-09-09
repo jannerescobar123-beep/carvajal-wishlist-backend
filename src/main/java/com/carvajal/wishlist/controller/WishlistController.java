@@ -56,4 +56,17 @@ public class WishlistController {
     public ResponseEntity<List<WishlistDTO>> getWishlistHistory() {
         return ResponseEntity.ok(wishlistService.getWishlistHistory(getAuthenticatedUserId()));
     }
+
+    @PutMapping("/{productId}")
+    @PreAuthorize("hasRole('CLIENT')")
+    public ResponseEntity<WishlistDTO> updateWishlistItemQuantity(
+            @PathVariable Long productId,
+            @Valid @RequestBody WishlistItemDTO wishlistItemDTO) {
+        WishlistDTO updatedItem = wishlistService.updateWishlistItemQuantity(
+                getAuthenticatedUserId(),
+                productId,
+                wishlistItemDTO
+        );
+        return ResponseEntity.ok(updatedItem);
+    }
 }
