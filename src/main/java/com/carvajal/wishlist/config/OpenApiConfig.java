@@ -18,26 +18,22 @@ public class OpenApiConfig {
                         .title("Carvajal Wishlist API")
                         .version("1.0.0")
                         .description(
-                                "API REST para la gestión de productos y wishlist. " +
-                                "Utiliza autenticación JWT Bearer. " +
-                                "Para obtener un token: POST /api/auth/login con credenciales de usuario."
+                                "API REST para la gestión de productos y wishlist."
                         ))
                 .addSecurityItem(
                         new SecurityRequirement()
-                                .addList("bearerAuth")
+                                .addList("basicAuth")
                 )
                 .components(
                         new Components()
                                 .addSecuritySchemes(
-                                        "bearerAuth",
+                                        "basicAuth",
                                         new SecurityScheme()
                                                 .type(SecurityScheme.Type.HTTP)
-                                                .scheme("bearer")
-                                                .bearerFormat("JWT")
+                                                .scheme("basic")
                                                 .description(
-                                                        "JWT Bearer token authentication. " +
-                                                        "Obtén el token con POST /api/auth/login " +
-                                                        "y úsalo en el header: Authorization: Bearer {token}"
+                                                        "Autenticación HTTP Basic. "
+                                                                + "Usuario demo: admin / admin123"
                                                 )
                                 )
                 );

@@ -62,8 +62,12 @@ public class JwtUtil {
                 .build()
                 .parseClaimsJws(token)
                 .getBody();
-        } catch (Exception e) {
-            // Token inválido o expirado
+        } catch (io.jsonwebtoken.ExpiredJwtException | 
+                 io.jsonwebtoken.UnsupportedJwtException | 
+                 io.jsonwebtoken.MalformedJwtException | 
+                 io.jsonwebtoken.security.SignatureException | 
+                 IllegalArgumentException e) {
+            // Token inválido, expirado, o con firma incorrecta
             return null;
         }
     }

@@ -19,14 +19,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")  // Usar configuración de test con variables de entorno correctas
 @Transactional
 class AuthIntegrationTest {
 
     @Autowired
     private MockMvc mockMvc;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @Test
     void registerAndLogin_Success() throws Exception {
