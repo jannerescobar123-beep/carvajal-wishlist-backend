@@ -71,6 +71,15 @@ class WishlistControllerTest {
     }
 
     @Test
+    void testGetWishlistHistory_Success() throws Exception {
+        WishlistDTO wishlistDTO = new WishlistDTO(1L, "Product", 1, BigDecimal.valueOf(100), true);
+        when(wishlistService.getWishlistHistory(anyLong())).thenReturn(List.of(wishlistDTO));
+
+        mockMvc.perform(get("/api/wishlist/history"))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void testAddToWishlist_Success() throws Exception {
         WishlistItemDTO requestDTO = new WishlistItemDTO(1L, 1);
         WishlistDTO responseDTO = new WishlistDTO(1L, "Product", 1, BigDecimal.valueOf(100), true);
@@ -84,10 +93,43 @@ class WishlistControllerTest {
     }
 
     @Test
+    void testUpdateWishlistItemQuantity_Success() throws Exception {
+        WishlistItemDTO requestDTO = new WishlistItemDTO(1L, 3);
+        WishlistDTO responseDTO = new WishlistDTO(1L, "Product", 3, BigDecimal.valueOf(100), true);
+
+        when(wishlistService.updateWishlistItemQuantity(anyLong(), anyLong(), any(WishlistItemDTO.class))).thenReturn(responseDTO);
+
+        mockMvc.perform(put("/api/wishlist/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isOk());
+    }
+
+    @Test
     void testRemoveFromWishlist_Success() throws Exception {
         doNothing().when(wishlistService).removeFromWishlist(anyLong(), anyLong());
 
         mockMvc.perform(delete("/api/wishlist/1"))
                 .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void testUpdateWishlistItemQuantity_WithInvalidQuantity_ShouldFail() throws Exception {
+        WishlistItemDTO requestDTO = new WishlistItemDTO(1L, 0);
+
+        mockMvc.perform(put("/api/wishlist/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void testAddToWishlist_WithoutProductId_ShouldFail() throws Exception {
+        WishlistItemDTO requestDTO = new WishlistItemDTO(null, 1);
+
+        mockMvc.perform(post("/api/wishlist")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(requestDTO)))
+                .andExpect(status().isBadRequest());
     }
 }
