@@ -1,0 +1,25 @@
+package com.carvajal.wishlist.dto;
+
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
+
+public class WishlistItemDTO {
+    // productId is optional for updates (path variable provides id)
+    private Long productId;
+    
+    @NotNull
+    @Positive
+    private Integer quantity = 1;
+
+    public WishlistItemDTO() {}
+
+    public WishlistItemDTO(Long productId, Integer quantity) {
+        this.productId = productId;
+        this.quantity = quantity;
+    }
+
+    public Long getProductId() { return productId; }
+    public void setProductId(Long productId) { this.productId = productId; }
+    public Integer getQuantity() { return quantity; }
+    public void setQuantity(Integer quantity) { this.quantity = quantity; }
+}
