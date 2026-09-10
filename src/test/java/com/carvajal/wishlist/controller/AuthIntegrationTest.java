@@ -36,7 +36,6 @@ class AuthIntegrationTest {
         userDTO.setPassword("password123");
         userDTO.setRole(Role.CLIENT);
 
-        // 1. Register
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(userDTO)))
@@ -44,12 +43,81 @@ class AuthIntegrationTest {
                 .andExpect(jsonPath("$.token").exists())
                 .andExpect(jsonPath("$.username").value("integrationUser"));
 
-        // 2. Login
         AuthRequestDTO loginRequest = new AuthRequestDTO("integrationUser", "password123");
         mockMvc.perform(post("/api/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(loginRequest)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.token").exists());
+    }
+
+    @Test
+    void register_duplicateUsername_throwsBadRequest() throws Exception {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername("dupUser");
+        userDTO.setEmail("dup1@example.com");
+        userDTO.setPassword("password123");
+        userDTO.setRole(Role.CLIENT);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userDTO)))
+                .andExpect(status().isCreated());
+
+        UserDTO duplicateDTO = new UserDTO();
+        duplicateDTO.setUsername("dupUser");
+        duplicateDTO.setEmail("dup2@example.com");
+        duplicateDTO.setPassword("password123");
+        duplicateDTO.setRole(Role.CLIENT);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(duplicateDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void register_duplicateEmail_throwsBadRequest() throws Exception {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername("emailUser1");
+        userDTO.setEmail("same@example.com");
+        userDTO.setPassword("password123");
+        userDTO.setRole(Role.CLIENT);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userDTO)))
+                .andExpect(status().isCreated());
+
+        UserDTO duplicateDTO = new UserDTO();
+        duplicateDTO.setUsername("emailUser2");
+        duplicateDTO.setEmail("same@example.com");
+        duplicateDTO.setPassword("password123");
+        duplicateDTO.setRole(Role.CLIENT);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(duplicateDTO)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void login_invalidCredentials_throwsUnauthorized() throws Exception {
+        UserDTO userDTO = new UserDTO();
+        userDTO.setUsername("loginTest");
+        userDTO.setEmail("login@test.com");
+        userDTO.setPassword("password123");
+        userDTO.setRole(Role.CLIENT);
+
+        mockMvc.perform(post("/api/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(userDTO)))
+                .andExpect(status().isCreated());
+
+        AuthRequestDTO badLogin = new AuthRequestDTO("loginTest", "wrongpassword");
+        mockMvc.perform(post("/api/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(badLogin)))
+                .andExpect(status().isUnauthorized());
     }
 }

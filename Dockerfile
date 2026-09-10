@@ -1,19 +1,14 @@
-# Usar imagen base de Java 21
-FROM eclipse-temurin:21-jdk-jammy
-
-# Directorio de trabajo
+# Build stage
+FROM eclipse-temurin:21-jdk-jammy AS build
 WORKDIR /app
-
-# Copiar pom.xml y descargar dependencias
 COPY pom.xml mvnw ./
 COPY .mvn .mvn
-RUN ./mvnw dependency:go-offline
-
-# Copiar código fuente
+RUN ./mvnw dependency:go-offline -q
 COPY src ./src
+RUN ./mvnw package -DskipTests -q
 
-# Compilar la aplicación
-RUN ./mvnw package -DskipTests
-
-# Ejecutar la aplicación
-ENTRYPOINT ["java", "-jar", "/app/target/wishlist-0.0.1-SNAPSHOT.jar"]
+# Runtime stage
+FROM eclipse-temurin:21-jre-jammy
+WORKDIR /app
+COPY --from=build /app/target/wishlist-0.0.1-SNAPSHOT.jar app.jar
+ENTRYPOINT ["java", "-jar", "app.jar"]

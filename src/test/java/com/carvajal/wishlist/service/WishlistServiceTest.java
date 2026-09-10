@@ -152,6 +152,55 @@ class WishlistServiceTest {
     }
 
     @Test
+    void testAddToWishlist_NullProductId() {
+        WishlistItemDTO nullProductIdDTO = new WishlistItemDTO(null, 1);
+
+        assertThrows(IllegalArgumentException.class, () -> wishlistService.addToWishlist(1L, nullProductIdDTO));
+    }
+
+    @Test
+    void testAddToWishlist_ProductNotFound() {
+        when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.addToWishlist(1L, wishlistItemDTO));
+    }
+
+    @Test
+    void testAddToWishlist_ProductNotActive() {
+        Product inactiveProduct = new Product();
+        inactiveProduct.setId(2L);
+        inactiveProduct.setName("Inactive Product");
+        inactiveProduct.setPrice(BigDecimal.valueOf(50));
+        inactiveProduct.setStock(5);
+        inactiveProduct.setIsActive(false);
+
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(inactiveProduct));
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.addToWishlist(1L, wishlistItemDTO));
+    }
+
+    @Test
+    void testRemoveFromWishlist_ProductNotInWishlist() {
+        when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.removeFromWishlist(1L, 99L));
+    }
+
+    @Test
+    void testUpdateWishlistItemQuantity_InvalidQuantity() {
+        assertThrows(IllegalArgumentException.class,
+                () -> wishlistService.updateWishlistItemQuantity(1L, 1L, new WishlistItemDTO(1L, 0)));
+    }
+
+    @Test
+    void testUpdateWishlistItemQuantity_ProductNotInWishlist() {
+        when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> wishlistService.updateWishlistItemQuantity(1L, 99L, new WishlistItemDTO(1L, 3)));
+    }
+
+    @Test
     void testGetWishlistHistory_MapsHistoryEntries() {
         com.carvajal.wishlist.entity.WishlistHistory history = new com.carvajal.wishlist.entity.WishlistHistory(
                 1L,
