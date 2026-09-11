@@ -36,10 +36,12 @@ class AuthIntegrationTest {
         userDTO.setPassword("password123");
         userDTO.setRole(Role.CLIENT);
 
+        String userJson = "{\"username\":\"integrationUser\",\"email\":\"integration@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
+
         // 1. Register
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").exists())
                 .andExpect(jsonPath("$.username").value("integrationUser"));
