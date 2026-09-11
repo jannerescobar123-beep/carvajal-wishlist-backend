@@ -124,8 +124,8 @@ class ProductControllerTest {
     }
 
     @Test
-    void hasStock_shouldReturnTrueWhenStockIsAvailable() throws Exception {
-        when(productService.hasStock(1L, 3)).thenReturn(true);
+    void checkStock_shouldReturnTrueWhenStockIsAvailable() throws Exception {
+        when(productService.checkStock(1L, 3)).thenReturn(true);
 
         mockMvc.perform(get("/api/products/1/stock").param("quantity", "3"))
                 .andExpect(status().isOk())

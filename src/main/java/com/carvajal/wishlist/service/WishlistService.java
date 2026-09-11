@@ -66,7 +66,7 @@ public class WishlistService {
             throw new ProductAlreadyInWishlistException("Product already in wishlist");
         }
 
-        productService.hasStock(product.getId(), wishlistItemDTO.getQuantity());
+        productService.checkStock(product.getId(), wishlistItemDTO.getQuantity());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -145,7 +145,7 @@ public class WishlistService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not in wishlist"));
 
         Product product = wishlist.getProduct();
-        productService.hasStock(product.getId(), wishlistItemDTO.getQuantity());
+        productService.checkStock(product.getId(), wishlistItemDTO.getQuantity());
 
         int previousQuantity = wishlist.getQuantity();
         wishlist.setQuantity(wishlistItemDTO.getQuantity());

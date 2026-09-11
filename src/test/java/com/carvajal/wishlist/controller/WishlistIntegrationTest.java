@@ -40,18 +40,14 @@ class WishlistIntegrationTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUsername("wlClient");
-        userDTO.setEmail("wlClient@test.com");
-        userDTO.setPassword("password123");
-        userDTO.setRole(Role.CLIENT);
+        String userJson = "{\"username\":\"integrationUser\",\"email\":\"integration@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(userDTO)))
+                        .content(userJson))
                 .andExpect(status().isCreated());
 
-        AuthRequestDTO loginRequest = new AuthRequestDTO("wlClient", "password123");
+        AuthRequestDTO loginRequest = new AuthRequestDTO("integrationUser", "password123");
         String loginResponse = mockMvc.perform(post("/api/auth/login")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(loginRequest)))
@@ -60,15 +56,11 @@ class WishlistIntegrationTest {
 
         userToken = objectMapper.readTree(loginResponse).get("token").asText();
 
-        UserDTO adminDTO = new UserDTO();
-        adminDTO.setUsername("wlAdmin");
-        adminDTO.setEmail("wlAdmin@test.com");
-        adminDTO.setPassword("password123");
-        adminDTO.setRole(Role.CLIENT);
+        String adminJson = "{\"username\":\"wlAdmin\",\"email\":\"wlAdmin@test.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(adminDTO)))
+                        .content(adminJson))
                 .andExpect(status().isCreated());
 
         com.carvajal.wishlist.entity.User adminUser = userRepository.findByUsername("wlAdmin").orElseThrow();

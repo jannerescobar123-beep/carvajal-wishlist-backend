@@ -1,6 +1,6 @@
 <div align="center">
   <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21" />
-  <img src="https://img.shields.io/badge/Spring_Boot-4.1.0-green.svg" alt="Spring Boot 4.1.0" />
+  <img src="https://img.shields.io/badge/Spring_Boot-3.4.1-green.svg" alt="Spring Boot 3.4.1" />
   <img src="https://img.shields.io/badge/PostgreSQL-16-blue.svg" alt="PostgreSQL 16" />
   <img src="https://img.shields.io/badge/Docker-Ready-2496ED.svg" alt="Docker Ready" />
   <img src="https://img.shields.io/badge/JWT-Security-red.svg" alt="JWT Security" />
@@ -49,7 +49,7 @@ Permite a los usuarios registrarse en la plataforma, explorar un catalogo de pro
 
 ## Arquitectura y Tecnologias
 - **Lenguaje Core:** Java 21
-- **Framework Principal:** Spring Boot 4.1.0 (MVC, Data JPA, Security)
+- **Framework Principal:** Spring Boot 3.4.1 (MVC, Data JPA, Security)
 - **Capa de Persistencia:** PostgreSQL 16 (Entidades relacionales robustas)
 - **Seguridad y Sesiones:** Spring Security + `io.jsonwebtoken`
 - **Documentacion de API:** Springdoc OpenAPI (Generacion automatica de Swagger UI)

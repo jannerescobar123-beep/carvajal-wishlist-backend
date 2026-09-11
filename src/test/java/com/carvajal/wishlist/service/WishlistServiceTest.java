@@ -75,7 +75,7 @@ class WishlistServiceTest {
     void testAddToWishlist_Success() {
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
-        when(productService.hasStock(anyLong(), anyInt())).thenReturn(true);
+        when(productService.checkStock(anyLong(), anyInt())).thenReturn(true);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(wishlistRepository.save(any(Wishlist.class))).thenReturn(wishlist);
         when(wishlistHistoryRepository.save(any())).thenReturn(null);
@@ -99,7 +99,7 @@ class WishlistServiceTest {
     void testAddToWishlist_StockNotAvailable() {
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
-        when(productService.hasStock(anyLong(), anyInt())).thenThrow(new StockNotAvailableException("No stock"));
+        when(productService.checkStock(anyLong(), anyInt())).thenThrow(new StockNotAvailableException("No stock"));
 
         assertThrows(StockNotAvailableException.class, () -> wishlistService.addToWishlist(1L, wishlistItemDTO));
     }
@@ -137,7 +137,7 @@ class WishlistServiceTest {
     @Test
     void testUpdateWishlistItemQuantity_Success() {
         when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.of(wishlist));
-        when(productService.hasStock(anyLong(), eq(3))).thenReturn(true);
+        when(productService.checkStock(anyLong(), eq(3))).thenReturn(true);
         when(wishlistRepository.save(any(Wishlist.class))).thenAnswer(invocation -> {
             Wishlist saved = invocation.getArgument(0);
             saved.setQuantity(3);

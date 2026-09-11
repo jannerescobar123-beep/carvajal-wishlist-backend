@@ -160,18 +160,18 @@ class ProductServiceTest {
     }
 
     @Test
-    void hasStock_shouldReturnTrueWhenEnoughStockExists() {
+    void checkStock_shouldReturnTrueWhenEnoughStockExists() {
         Product product = createProduct(1L, "Laptop", true);
         product.setStock(10);
 
         when(productRepository.findById(1L))
                 .thenReturn(Optional.of(product));
 
-        assertTrue(productService.hasStock(1L, 5));
+        assertTrue(productService.checkStock(1L, 5));
     }
 
     @Test
-    void hasStock_shouldThrowWhenStockIsInsufficient() {
+    void checkStock_shouldThrowWhenStockIsInsufficient() {
         Product product = createProduct(1L, "Laptop", true);
         product.setStock(2);
 
@@ -180,18 +180,18 @@ class ProductServiceTest {
 
         assertThrows(
                 StockNotAvailableException.class,
-                () -> productService.hasStock(1L, 5)
+                () -> productService.checkStock(1L, 5)
         );
     }
 
     @Test
-    void hasStock_shouldThrowWhenProductDoesNotExist() {
+    void checkStock_shouldThrowWhenProductDoesNotExist() {
         when(productRepository.findById(99L))
                 .thenReturn(Optional.empty());
 
         assertThrows(
                 ResourceNotFoundException.class,
-                () -> productService.hasStock(99L, 1)
+                () -> productService.checkStock(99L, 1)
         );
     }
 

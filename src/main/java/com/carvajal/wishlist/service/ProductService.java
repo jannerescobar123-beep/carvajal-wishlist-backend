@@ -82,7 +82,7 @@ public class ProductService {
         productRepository.delete(product);
     }
 
-    public boolean hasStock(Long productId, int quantity) {
+    public boolean checkStock(Long productId, int quantity) {
         Product product = productRepository.findById(productId)
                 .filter(Product::getIsActive)
                 .orElseThrow(() ->
