@@ -94,8 +94,51 @@ Permite a los usuarios registrarse en la plataforma, explorar un catalogo de pro
 
 ---
 
-## Reglas de Negocio
 
+## 🎨 Guía Rápida para el Equipo Frontend
+
+¡Hola equipo de Frontend! 👋 Esta sección está diseñada específicamente para que puedan integrar la API de manera rápida y sin fricciones.
+
+### 1. Entornos y Documentación Interactiva
+- **Base URL Local:** `http://localhost:8080/api`
+- **Swagger UI (Pruebas e interactividad):** `/swagger-ui/index.html`
+- **Esquema OpenAPI (Para autogenerar interfaces/tipos en TypeScript):** `/v3/api-docs`
+
+### 2. Flujo de Autenticación (Tokens JWT)
+La API utiliza JSON Web Tokens (JWT) de manera **Stateless**. El servidor no guarda sesiones (no existen cookies automáticas).
+1. **Login:** Ejecuta un `POST /api/auth/login` enviando las credenciales.
+2. **Almacenamiento:** Recibirás un JSON con la propiedad `token`. Cópialo y guárdalo en memoria, `localStorage` o `sessionStorage`.
+3. **Peticiones Protegidas:** Para consultar rutas como `/api/wishlist`, inyecta el token en las cabeceras (*Headers*) HTTP usando el esquema `Bearer`:
+   ```http
+   Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+   ```
+
+### 3. Estructura Canónica de Errores
+Cualquier error HTTP lanzado por la API (400, 401, 403, 404, 409, 500) devolverá **siempre** el mismo formato JSON. Configura tu *Interceptor* (en Axios, Fetch o Angular HttpClient) para leer siempre el campo `message` y mostrárselo al usuario:
+
+```json
+{
+  "timestamp": "2026-09-11T15:05:55.441",
+  "status": 401,
+  "error": "Unauthorized",
+  "message": "Full authentication is required to access this resource"
+}
+```
+
+### 4. Flujo Recomendado para la Lista de Deseos
+1. **Catálogo:** Ejecuta `GET /api/products` (Público). Muestra la lista de productos al usuario.
+2. **Intercepción 401:** Si el usuario no está logueado y hace clic en "Añadir a lista", el backend lanzará un `401`. Captúralo y redirige a la vista de Login.
+3. **Añadir:** `POST /api/wishlist` (Requiere Token) enviando `{ "productId": 1, "quantity": 1 }`.
+4. **Validación Visual de Stock:** Al consultar la lista con `GET /api/wishlist`, cada objeto devolverá la propiedad booleana `inStock`. Si un usuario guardó algo que luego se agotó, esta propiedad vendrá en `false`. **Usa este valor para deshabilitar el botón de "Comprar/Añadir a carrito" en tu UI**.
+
+### 5. Solución a Problemas de CORS
+La política de Cross-Origin está estrictamente configurada. Por defecto se permite el tráfico desde Angular (`http://localhost:4200`). Si tu equipo de Frontend levanta React en el `3000` o Vite en el `5173`, el desarrollador backend o devops deberá inyectar la variable de entorno:
+`export CORS_ALLOWED_ORIGIN=http://localhost:5173`
+De lo contrario, verás un error rojo de CORS en la consola de Chrome/Firefox.
+
+--- 
+
+## Reglas de Negocio
 El sistema aplica validaciones criticas mediante Excepciones personalizadas para proteger la integridad de los datos:
 1. **Unicidad de Usuario:** No pueden existir dos cuentas con el mismo correo o nombre de usuario (`EmailAlreadyExistsException`, `UsernameAlreadyExistsException`).
 2. **Duplicidad en Lista:** Un usuario no puede agregar el mismo producto mas de una vez a su lista activa (`ProductAlreadyInWishlistException`).
