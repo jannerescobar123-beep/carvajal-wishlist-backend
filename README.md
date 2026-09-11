@@ -2,191 +2,128 @@
   <img src="https://img.shields.io/badge/Java-21-orange.svg" alt="Java 21" />
   <img src="https://img.shields.io/badge/Spring_Boot-3.4.1-green.svg" alt="Spring Boot 3.4.1" />
   <img src="https://img.shields.io/badge/PostgreSQL-16-blue.svg" alt="PostgreSQL 16" />
-  <img src="https://img.shields.io/badge/Docker-Ready-2496ED.svg" alt="Docker Ready" />
   <img src="https://img.shields.io/badge/JWT-Security-red.svg" alt="JWT Security" />
 </div>
 
-<h1 align="center">Sistema de Lista de Deseos (Wishlist API) - Carvajal</h1>
+<h1 align="center">🛒 Carvajal Wishlist API</h1>
 
 <p align="center">
-  Backend RESTful para gestionar la autenticacion de usuarios, perfiles y el sistema central de Listas de Deseos para el ecosistema de comercio electronico de Carvajal. Desarrollada con <b>Spring Boot</b>.
+  <b>Documentación Oficial para Integración Frontend</b><br>
+  API RESTful para gestionar la autenticación, el catálogo de productos escolares/oficina y las listas de deseos (Wishlist) de los clientes de Carvajal.
 </p>
 
 ---
 
-## Indice
-- [Descripcion del Proyecto](#descripcion-del-proyecto)
-- [Caracteristicas Principales](#caracteristicas-principales)
-- [Arquitectura y Tecnologias](#arquitectura-y-tecnologias)
-- [Prerequisites](#prerequisites)
-- [Estructura de Endpoints](#estructura-de-endpoints)
-- [Reglas de Negocio](#reglas-de-negocio)
-- [Variables de Entorno](#variables-de-entorno)
-- [Despliegue en Render](#despliegue-en-render)
-- [Documentacion de la API (Swagger)](#documentacion-de-la-api-swagger)
-- [Contribuidores](#contribuidores)
+## 📖 Índice
+- [Recursos de Integración](#-recursos-de-integración)
+- [Flujo de Autenticación (JWT)](#-flujo-de-autenticación-jwt)
+- [Guía de Integración: Wishlist](#-guía-de-integración-wishlist)
+- [Manejo de Errores (Interceptors)](#-manejo-de-errores-interceptors)
+- [Referencia de Endpoints](#-referencia-de-endpoints)
+- [Políticas CORS](#-políticas-cors)
 
 ---
 
-## Descripcion del Proyecto
+## 🔗 Recursos de Integración
 
-El **Sistema de Lista de Deseos** de Carvajal es un microservicio backend disenado para potenciar la retencion de clientes y facilitar las compras planificadas.
+Para facilitar el trabajo del equipo Frontend, la API cuenta con una interfaz interactiva donde puedes probar todas las rutas y autogenerar tus interfaces/tipos (ej. para TypeScript).
 
-Permite a los usuarios registrarse en la plataforma, explorar un catalogo de productos e ir guardando sus articulos favoritos en una lista de deseos personalizable. La API almacena la lista del usuario, valida la disponibilidad de stock en tiempo real al momento de agregar un producto y mantiene un registro historico inmutable de sus interacciones (agregar/remover) para futuros analisis de inteligencia de negocios o marketing.
-
----
-
-## Caracteristicas Principales
-- **Autenticacion Segura (Stateless):** Implementacion completa de JSON Web Tokens (JWT) con soporte para roles (`ADMIN`, `CLIENT`).
-- **Gestion de Usuarios:** Perfilado de usuarios con contrasenas cifradas via `BCrypt` de Spring Security.
-- **Lista de Deseos Dinamica:** Endpoints transaccionales para agregar, listar y remover productos de la lista de deseos.
-- **Validacion de Inventario en Tiempo Real:** Al agregar un producto, la API valida que este activo y con stock suficiente. El endpoint de consulta de la lista incluye el campo `inStock` con el estado actual de cada producto.
-- **Trazabilidad (Historico):** Registro secuencial e historico de interacciones del usuario con su lista.
-- **Proteccion CORS Configurada:** Lista para integrarse de inmediato de forma segura con clientes Frontend.
-- **Manejo Global de Errores:** Excepciones interceptadas (`@RestControllerAdvice`) y presentadas en un formato JSON estandar y predecible.
+- **Swagger UI (Pruebas manuales):** `/swagger-ui/index.html`
+- **Esquema OpenAPI (JSON):** `/v3/api-docs`
 
 ---
 
-## Arquitectura y Tecnologias
-- **Lenguaje Core:** Java 21
-- **Framework Principal:** Spring Boot 3.4.1 (MVC, Data JPA, Security)
-- **Capa de Persistencia:** PostgreSQL 16 (Entidades relacionales robustas)
-- **Seguridad y Sesiones:** Spring Security + `io.jsonwebtoken`
-- **Documentacion de API:** Springdoc OpenAPI (Generacion automatica de Swagger UI)
-- **Contenedores y Orquestacion:** Docker y Docker Compose (Entorno encapsulado)
+## 🔐 Flujo de Autenticación (JWT)
 
-> Este repositorio contiene exclusivamente el **backend REST**. No incluye frontend ni aplicaciones moviles.
+Esta API es **Stateless**. No utiliza cookies de sesión, todo se maneja a través de JSON Web Tokens (JWT).
 
----
+### 1. Obtener el Token
+El usuario debe iniciar sesión enviando sus credenciales a `POST /api/auth/login`.
+```json
+// Petición
+{
+  "username": "usuario_ejemplo",
+  "password": "mi_password_secreto"
+}
 
-## Prerequisites
+// Respuesta (200 OK)
+{
+  "token": "eyJhbGciOiJIUzI1NiJ9...",
+  "username": "usuario_ejemplo",
+  "role": "CLIENT"
+}
+```
 
-- **Java 21** (JDK para desarrollo, JRE para ejecucion)
-- **Maven 3.9+** o usar el Maven Wrapper incluido (`./mvnw`)
-- **Docker y Docker Compose** (opcional, para despliegue contenedorizado)
-- **PostgreSQL 16** (si se ejecuta sin Docker)
+### 2. Inyectar el Token
+Debes guardar el `token` (en `localStorage`, `sessionStorage` o Zustand/Redux). Para consultar cualquier ruta protegida (ej. la lista de deseos), debes enviar este token en los **Headers** de tu petición HTTP usando el esquema `Bearer`:
 
----
-
-## Estructura de Endpoints
-
-### Autenticacion (Publicos)
-- `POST /api/auth/register` - Registra un nuevo usuario con rol por defecto `CLIENT`.
-- `POST /api/auth/login` - Valida credenciales contra la base de datos y retorna el JWT Token firmado.
-
-### Lista de Deseos (Requiere Token `CLIENT`)
-- `GET /api/wishlist` - Obtiene los productos activos en la lista del usuario actual, incluyendo el campo `inStock` con el estado de stock en tiempo real.
-- `POST /api/wishlist` - Agrega un producto a la lista de deseos (Requiere `{ productId, quantity }`). Valida stock y estado activo.
-- `DELETE /api/wishlist/{productId}` - Elimina un producto especifico de la lista.
-- `PUT /api/wishlist/{productId}` - Actualiza la cantidad de un producto en la lista.
-- `GET /api/wishlist/history` - Lista el historico de interacciones, ordenado de mas reciente a mas antiguo.
-
-### Administracion (Requiere Token `ADMIN`)
-- `PUT /api/admin/users/{userId}/role` - Escala o degrada los permisos de un usuario existente.
-
-### Productos (Publicos para lectura, ADMIN para escritura)
-- `GET /api/products` - Lista de productos activos del catalogo.
-- `GET /api/products/{id}` - Obtiene un producto por su ID.
-- `GET /api/products/{id}/stock` - Verifica si hay stock disponible para un producto.
-- `POST /api/products` - Crea un nuevo producto (ADMIN).
-- `PUT /api/products/{id}` - Actualiza un producto existente (ADMIN).
-- `DELETE /api/products/{id}` - Elimina un producto (ADMIN).
+```http
+Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+```
+*(Cualquier petición sin este header, o con un token expirado, devolverá un error `401 Unauthorized`).*
 
 ---
 
+## 🛍️ Guía de Integración: Wishlist
 
-## 🎨 Guía Rápida para el Equipo Frontend
+Para construir una experiencia de usuario fluida, te recomendamos seguir este flujo en el Frontend:
 
-¡Hola equipo de Frontend! 👋 Esta sección está diseñada específicamente para que puedan integrar la API de manera rápida y sin fricciones.
-
-### 1. Entornos y Documentación Interactiva
-- **Base URL Local:** `http://localhost:8080/api`
-- **Swagger UI (Pruebas e interactividad):** `/swagger-ui/index.html`
-- **Esquema OpenAPI (Para autogenerar interfaces/tipos en TypeScript):** `/v3/api-docs`
-
-### 2. Flujo de Autenticación (Tokens JWT)
-La API utiliza JSON Web Tokens (JWT) de manera **Stateless**. El servidor no guarda sesiones (no existen cookies automáticas).
-1. **Login:** Ejecuta un `POST /api/auth/login` enviando las credenciales.
-2. **Almacenamiento:** Recibirás un JSON con la propiedad `token`. Cópialo y guárdalo en memoria, `localStorage` o `sessionStorage`.
-3. **Peticiones Protegidas:** Para consultar rutas como `/api/wishlist`, inyecta el token en las cabeceras (*Headers*) HTTP usando el esquema `Bearer`:
-   ```http
-   Authorization: Bearer eyJhbGciOiJIUzI1NiJ9...
+1. **Mostrar el Catálogo:** Consume `GET /api/products` (Ruta pública, no requiere token). Muestra las tarjetas de productos.
+2. **Botón "Añadir a Deseos":** Si el usuario hace clic y no tiene token, redirígelo a la vista de `/login`.
+3. **Guardar en Wishlist:** Si está logueado, haz un `POST /api/wishlist` con el siguiente cuerpo:
+   ```json
+   {
+     "productId": 5,
+     "quantity": 1
+   }
    ```
+4. **Renderizar la Wishlist:** Consume `GET /api/wishlist` para pintar el carrito de deseos. 
+   > 💡 **Tip de UI:** La respuesta de este endpoint incluye la propiedad booleana `inStock`. Si un usuario guardó un producto que posteriormente se agotó, esta propiedad vendrá en `false`. **Usa este valor para deshabilitar el botón de "Comprar" visualmente en tu interfaz.**
 
-### 3. Estructura Canónica de Errores
-Cualquier error HTTP lanzado por la API (400, 401, 403, 404, 409, 500) devolverá **siempre** el mismo formato JSON. Configura tu *Interceptor* (en Axios, Fetch o Angular HttpClient) para leer siempre el campo `message` y mostrárselo al usuario:
+---
+
+## ⚠️ Manejo de Errores (Interceptors)
+
+Cualquier error de negocio o validación (400, 401, 403, 404, 409) devolverá **siempre** esta estructura JSON canónica. 
+
+**Recomendación:** Configura un *Interceptor* global en tu cliente HTTP (Axios, Fetch, Angular HttpClient) para leer siempre el campo `message` y mostrarlo en un Toast/Alerta al usuario.
 
 ```json
 {
   "timestamp": "2026-09-11T15:05:55.441",
-  "status": 401,
-  "error": "Unauthorized",
-  "message": "Full authentication is required to access this resource"
+  "status": 400,
+  "error": "Bad Request",
+  "message": "No hay suficiente stock disponible para este producto"
 }
 ```
 
-### 4. Flujo Recomendado para la Lista de Deseos
-1. **Catálogo:** Ejecuta `GET /api/products` (Público). Muestra la lista de productos al usuario.
-2. **Intercepción 401:** Si el usuario no está logueado y hace clic en "Añadir a lista", el backend lanzará un `401`. Captúralo y redirige a la vista de Login.
-3. **Añadir:** `POST /api/wishlist` (Requiere Token) enviando `{ "productId": 1, "quantity": 1 }`.
-4. **Validación Visual de Stock:** Al consultar la lista con `GET /api/wishlist`, cada objeto devolverá la propiedad booleana `inStock`. Si un usuario guardó algo que luego se agotó, esta propiedad vendrá en `false`. **Usa este valor para deshabilitar el botón de "Comprar/Añadir a carrito" en tu UI**.
-
-### 5. Solución a Problemas de CORS
-La política de Cross-Origin está estrictamente configurada. Por defecto se permite el tráfico desde Angular (`http://localhost:4200`). Si tu equipo de Frontend levanta React en el `3000` o Vite en el `5173`, el desarrollador backend o devops deberá inyectar la variable de entorno:
-`export CORS_ALLOWED_ORIGIN=http://localhost:5173`
-De lo contrario, verás un error rojo de CORS en la consola de Chrome/Firefox.
-
---- 
-
-## Reglas de Negocio
-El sistema aplica validaciones criticas mediante Excepciones personalizadas para proteger la integridad de los datos:
-1. **Unicidad de Usuario:** No pueden existir dos cuentas con el mismo correo o nombre de usuario (`EmailAlreadyExistsException`, `UsernameAlreadyExistsException`).
-2. **Duplicidad en Lista:** Un usuario no puede agregar el mismo producto mas de una vez a su lista activa (`ProductAlreadyInWishlistException`).
-3. **Disponibilidad (Stock):** Si el producto se encuentra inactivo o su stock es insuficiente (`quantity` > stock actual), la API denegara la adicion a la lista de deseos (`StockNotAvailableException`, `ResourceNotFoundException`).
+### Errores Comunes a Capturar
+- `401 Unauthorized`: Token ausente o expirado. (Acción sugerida: Desloguear y redirigir al Login).
+- `409 Conflict`: Intentas registrar un usuario que ya existe, o agregar un producto que ya está en la Wishlist.
+- `404 Not Found`: El producto solicitado no existe o fue deshabilitado.
 
 ---
 
-## Variables de Entorno
+## 📡 Referencia de Endpoints
 
-La API es configurable a traves de variables de entorno para adaptarse a distintos entornos (Desarrollo, QA, Produccion):
-
-| Variable | Descripcion | Ejemplo |
-|----------|-------------|---------|
-| `DB_URL` | URL JDBC de conexion a PostgreSQL | `jdbc:postgresql://localhost:5433/wishlist_db` |
-| `DB_USERNAME` | Usuario de la base de datos | `postgres` |
-| `DB_PASSWORD` | Contrasena de la base de datos | `secret` |
-| `JWT_SECRET` | Clave secreta para firmar los tokens JWT (minimo 32 caracteres) | Generar con `openssl rand -base64 32` |
-
-En Docker Compose, estas variables se pasan directamente como variables de entorno al contenedor del backend.
-
----
-
-## Despliegue en Render
-
-1. Crear un servicio Web en Render conectado al repositorio.
-2. Configurar las **Environment Variables** en Render:
-   - `DB_URL`: URL de la base de datos PostgreSQL de Render (formato `jdbc:postgresql://...`)
-   - `DB_USERNAME`: Usuario de la BD
-   - `DB_PASSWORD`: Contrasena de la BD
-   - `JWT_SECRET`: Secreto JWT (generar con `openssl rand -base64 32`)
-3. Configurar los comandos en el servicio de Render:
-   - **Build Command:** `./mvnw clean package -DskipTests`
-   - **Start Command:** `java -jar target/*.jar`
-
-**IMPORTANTE:** Nunca colocar credenciales reales en el repositorio. Todas las credenciales deben configurarse como Environment Variables en Render.
+| Método | Endpoint | Descripción | Requiere Auth |
+| :--- | :--- | :--- | :---: |
+| **POST** | `/api/auth/register` | Crea una nueva cuenta de cliente | ❌ |
+| **POST** | `/api/auth/login` | Autentica y devuelve el JWT | ❌ |
+| **GET** | `/api/products` | Lista el catálogo de productos activos | ❌ |
+| **GET** | `/api/products/{id}` | Detalle de un producto específico | ❌ |
+| **GET** | `/api/wishlist` | Obtiene la lista de deseos del usuario actual | 🛡️ `CLIENT` |
+| **POST** | `/api/wishlist` | Añade un producto a la lista | 🛡️ `CLIENT` |
+| **DELETE**| `/api/wishlist/{productId}` | Remueve un producto de la lista | 🛡️ `CLIENT` |
+| **GET** | `/api/wishlist/history` | Historial inmutable de movimientos | 🛡️ `CLIENT` |
 
 ---
 
-## Documentacion de la API (Swagger)
+## 🌐 Políticas CORS
 
-El sistema autogenera su propio manual interactivo usando el estandar OpenAPI v3.
-
-- **Interfaz Grafica (Swagger UI):** `/swagger-ui/index.html`
-- **Esquema JSON (OpenAPI):** `/v3/api-docs`
+Por motivos de seguridad, la API rechaza peticiones desde orígenes no autorizados. 
+- Por defecto, el tráfico está permitido desde `http://localhost:4200` (entorno Angular por defecto). 
+- **Si usas React (3000) o Vite (5173):** Asegúrate de notificar al desarrollador backend para que modifique la variable de entorno `CORS_ALLOWED_ORIGIN` en el servidor, de lo contrario verás un error rojo de "CORS Policy" en la consola de tu navegador.
 
 ---
-
-## Contribuidores
-
-- **Janner Escobar** - Backend Developer (Modulo Product, Documentacion Swagger, Core de Validaciones, Tests, Docker).
-- **Michael Vera** - Backend Developer (Seguridad JWT, Modulo Users, Modulo Wishlist, Contenedores).
+*Desarrollado con ❤️ por el equipo de Backend de Carvajal (Janner Escobar & Michael Vera).*
