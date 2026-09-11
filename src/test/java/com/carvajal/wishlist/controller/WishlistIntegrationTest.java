@@ -3,7 +3,6 @@ package com.carvajal.wishlist.controller;
 import com.carvajal.wishlist.dto.AuthRequestDTO;
 import com.carvajal.wishlist.dto.ProductDTO;
 import com.carvajal.wishlist.dto.WishlistItemDTO;
-import com.carvajal.wishlist.dto.UserDTO;
 import com.carvajal.wishlist.entity.Role;
 import com.carvajal.wishlist.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
