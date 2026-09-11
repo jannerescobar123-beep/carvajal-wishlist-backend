@@ -211,7 +211,7 @@ class WishlistServiceTest {
                 "UPDATED_FROM_2_TO_3"
         );
         when(wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(history));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.findAllById(any())).thenReturn(List.of(product));
 
         List<WishlistDTO> response = wishlistService.getWishlistHistory(1L);
 
