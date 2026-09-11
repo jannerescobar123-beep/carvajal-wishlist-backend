@@ -17,6 +17,7 @@ public class UserDTO {
     private String email;
     
     @NotNull
+    @com.fasterxml.jackson.annotation.JsonProperty(access = com.fasterxml.jackson.annotation.JsonProperty.Access.WRITE_ONLY)
     private String password;
     
     private Role role = Role.CLIENT;

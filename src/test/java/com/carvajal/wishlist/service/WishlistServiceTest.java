@@ -75,7 +75,7 @@ class WishlistServiceTest {
     void testAddToWishlist_Success() {
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
-        when(productService.hasStock(anyLong(), anyInt())).thenReturn(true);
+        when(productService.checkStock(anyLong(), anyInt())).thenReturn(true);
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(wishlistRepository.save(any(Wishlist.class))).thenReturn(wishlist);
         when(wishlistHistoryRepository.save(any())).thenReturn(null);
@@ -99,7 +99,7 @@ class WishlistServiceTest {
     void testAddToWishlist_StockNotAvailable() {
         when(productRepository.findById(anyLong())).thenReturn(Optional.of(product));
         when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
-        when(productService.hasStock(anyLong(), anyInt())).thenThrow(new StockNotAvailableException("No stock"));
+        when(productService.checkStock(anyLong(), anyInt())).thenThrow(new StockNotAvailableException("No stock"));
 
         assertThrows(StockNotAvailableException.class, () -> wishlistService.addToWishlist(1L, wishlistItemDTO));
     }
@@ -137,7 +137,7 @@ class WishlistServiceTest {
     @Test
     void testUpdateWishlistItemQuantity_Success() {
         when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.of(wishlist));
-        when(productService.hasStock(anyLong(), eq(3))).thenReturn(true);
+        when(productService.checkStock(anyLong(), eq(3))).thenReturn(true);
         when(wishlistRepository.save(any(Wishlist.class))).thenAnswer(invocation -> {
             Wishlist saved = invocation.getArgument(0);
             saved.setQuantity(3);
@@ -152,6 +152,55 @@ class WishlistServiceTest {
     }
 
     @Test
+    void testAddToWishlist_NullProductId() {
+        WishlistItemDTO nullProductIdDTO = new WishlistItemDTO(null, 1);
+
+        assertThrows(IllegalArgumentException.class, () -> wishlistService.addToWishlist(1L, nullProductIdDTO));
+    }
+
+    @Test
+    void testAddToWishlist_ProductNotFound() {
+        when(productRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.addToWishlist(1L, wishlistItemDTO));
+    }
+
+    @Test
+    void testAddToWishlist_ProductNotActive() {
+        Product inactiveProduct = new Product();
+        inactiveProduct.setId(2L);
+        inactiveProduct.setName("Inactive Product");
+        inactiveProduct.setPrice(BigDecimal.valueOf(50));
+        inactiveProduct.setStock(5);
+        inactiveProduct.setIsActive(false);
+
+        when(productRepository.findById(anyLong())).thenReturn(Optional.of(inactiveProduct));
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.addToWishlist(1L, wishlistItemDTO));
+    }
+
+    @Test
+    void testRemoveFromWishlist_ProductNotInWishlist() {
+        when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> wishlistService.removeFromWishlist(1L, 99L));
+    }
+
+    @Test
+    void testUpdateWishlistItemQuantity_InvalidQuantity() {
+        assertThrows(IllegalArgumentException.class,
+                () -> wishlistService.updateWishlistItemQuantity(1L, 1L, new WishlistItemDTO(1L, 0)));
+    }
+
+    @Test
+    void testUpdateWishlistItemQuantity_ProductNotInWishlist() {
+        when(wishlistRepository.findByUserIdAndProductId(anyLong(), anyLong())).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> wishlistService.updateWishlistItemQuantity(1L, 99L, new WishlistItemDTO(1L, 3)));
+    }
+
+    @Test
     void testGetWishlistHistory_MapsHistoryEntries() {
         com.carvajal.wishlist.entity.WishlistHistory history = new com.carvajal.wishlist.entity.WishlistHistory(
                 1L,
@@ -162,7 +211,7 @@ class WishlistServiceTest {
                 "UPDATED_FROM_2_TO_3"
         );
         when(wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(anyLong())).thenReturn(List.of(history));
-        when(productRepository.findById(1L)).thenReturn(Optional.of(product));
+        when(productRepository.findAllById(any())).thenReturn(List.of(product));
 
         List<WishlistDTO> response = wishlistService.getWishlistHistory(1L);
 

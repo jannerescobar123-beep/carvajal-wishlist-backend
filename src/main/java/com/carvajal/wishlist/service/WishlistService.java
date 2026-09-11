@@ -66,7 +66,7 @@ public class WishlistService {
             throw new ProductAlreadyInWishlistException("Product already in wishlist");
         }
 
-        productService.hasStock(product.getId(), wishlistItemDTO.getQuantity());
+        productService.checkStock(product.getId(), wishlistItemDTO.getQuantity());
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
@@ -108,28 +108,31 @@ public class WishlistService {
                 .collect(Collectors.toList());
     }
 
-    private WishlistDTO mapHistoryToDTO(WishlistHistory history) {
-        Product product = productRepository.findById(history.getProductId()).orElse(null);
-        boolean inStock = product != null && product.getIsActive() && product.getStock() >= history.getQuantity();
-
-        return new WishlistDTO(
-                history.getProductId(),
-                history.getProductName(),
-                history.getQuantity(),
-                product != null ? product.getPrice() : history.getPrice(),
-                inStock
-        );
-    }
-
     public List<WishlistDTO> getWishlistHistory(Long userId) {
-        return wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(userId)
-                .stream()
-                .map(this::mapHistoryToDTO)
-                .collect(Collectors.toList());
-    }
+        List<WishlistHistory> historyList = wishlistHistoryRepository.findAllByUserIdOrderByCreatedAtDesc(userId);
+        
+        // Extraer IDs únicos para consultar de una vez
+        java.util.Set<Long> productIds = historyList.stream()
+                .map(WishlistHistory::getProductId)
+                .collect(Collectors.toSet());
 
-    public List<WishlistDTO> checkWishlistStock(Long userId) {
-        return getWishlist(userId);
+        // Traer todos los productos en 1 sola consulta
+        java.util.Map<Long, Product> productMap = productRepository.findAllById(productIds)
+                .stream()
+                .collect(Collectors.toMap(Product::getId, p -> p));
+
+        return historyList.stream().map(history -> {
+            Product product = productMap.get(history.getProductId());
+            boolean inStock = product != null && product.getIsActive() && product.getStock() >= history.getQuantity();
+
+            return new WishlistDTO(
+                    history.getProductId(),
+                    history.getProductName(),
+                    history.getQuantity(),
+                    product != null ? product.getPrice() : history.getPrice(),
+                    inStock
+            );
+        }).collect(Collectors.toList());
     }
 
     @Transactional
@@ -142,7 +145,7 @@ public class WishlistService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not in wishlist"));
 
         Product product = wishlist.getProduct();
-        productService.hasStock(product.getId(), wishlistItemDTO.getQuantity());
+        productService.checkStock(product.getId(), wishlistItemDTO.getQuantity());
 
         int previousQuantity = wishlist.getQuantity();
         wishlist.setQuantity(wishlistItemDTO.getQuantity());

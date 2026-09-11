@@ -86,23 +86,6 @@ public class JwtUtil {
                 .compact();
     }
 
-    /**
-     * Valida un token JWT.
-     * @deprecated Use {@link #getValidatedClaims(String)} instead
-     */
-    @Deprecated(forRemoval = true)
-    public boolean validateToken(String token) {
-        return getValidatedClaims(token) != null;
-    }
-
-    public String getUsernameFromToken(String token) {
-        Claims claims = getValidatedClaims(token);
-        if (claims == null) {
-            throw new IllegalArgumentException("Invalid or expired token");
-        }
-        return claims.getSubject();
-    }
-
     @SuppressWarnings("unchecked")
     public List<String> getRolesFromToken(String token) {
         Claims claims = getValidatedClaims(token);

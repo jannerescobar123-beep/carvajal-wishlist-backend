@@ -35,15 +35,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
         if (authHeader != null && authHeader.startsWith("Bearer ")) {
             token = authHeader.substring(7);
+
             try {
-                if (jwtUtil.validateToken(token)) {
-                    username = jwtUtil.getUsernameFromToken(token);
+                var claims = jwtUtil.getValidatedClaims(token);
+
+                if (claims != null) {
+                    username = claims.getSubject();
                 }
-            } catch (io.jsonwebtoken.ExpiredJwtException | 
-                     io.jsonwebtoken.UnsupportedJwtException | 
-                     io.jsonwebtoken.MalformedJwtException | 
-                     io.jsonwebtoken.security.SignatureException | 
-                     IllegalArgumentException ignored) {
+            } catch (IllegalArgumentException ignored) {
                 // Token inválido, se continúa sin autenticar
             }
         }

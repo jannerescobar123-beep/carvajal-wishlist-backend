@@ -31,12 +31,12 @@ public class ProductController {
     }
 
     @GetMapping("/{id}/stock")
-    public ResponseEntity<Boolean> hasStock(
+    public ResponseEntity<Boolean> checkStock(
             @PathVariable Long id,
             @RequestParam(defaultValue = "1") int quantity) {
 
         return ResponseEntity.ok(
-                productService.hasStock(id, quantity)
+                productService.checkStock(id, quantity)
         );
     }
 

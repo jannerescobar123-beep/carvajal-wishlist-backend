@@ -5,8 +5,8 @@ import com.carvajal.wishlist.service.ProductService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
-import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -124,8 +124,8 @@ class ProductControllerTest {
     }
 
     @Test
-    void hasStock_shouldReturnTrueWhenStockIsAvailable() throws Exception {
-        when(productService.hasStock(1L, 3)).thenReturn(true);
+    void checkStock_shouldReturnTrueWhenStockIsAvailable() throws Exception {
+        when(productService.checkStock(1L, 3)).thenReturn(true);
 
         mockMvc.perform(get("/api/products/1/stock").param("quantity", "3"))
                 .andExpect(status().isOk())
