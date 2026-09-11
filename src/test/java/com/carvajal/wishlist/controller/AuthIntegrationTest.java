@@ -36,9 +36,11 @@ class AuthIntegrationTest {
         userDTO.setPassword("password123");
         userDTO.setRole(Role.CLIENT);
 
+        String userJson = "{\"username\":\"integrationUser\",\"email\":\"integration@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
+
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").exists())
                 .andExpect(jsonPath("$.username").value("integrationUser"));
@@ -53,65 +55,45 @@ class AuthIntegrationTest {
 
     @Test
     void register_duplicateUsername_throwsBadRequest() throws Exception {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUsername("dupUser");
-        userDTO.setEmail("dup1@example.com");
-        userDTO.setPassword("password123");
-        userDTO.setRole(Role.CLIENT);
+        String userJson = "{\"username\":\"dupUser\",\"email\":\"dup1@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isCreated());
 
-        UserDTO duplicateDTO = new UserDTO();
-        duplicateDTO.setUsername("dupUser");
-        duplicateDTO.setEmail("dup2@example.com");
-        duplicateDTO.setPassword("password123");
-        duplicateDTO.setRole(Role.CLIENT);
+        String duplicateJson = "{\"username\":\"dupUser\",\"email\":\"dup2@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(duplicateDTO)))
+                .content(duplicateJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void register_duplicateEmail_throwsBadRequest() throws Exception {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUsername("emailUser1");
-        userDTO.setEmail("same@example.com");
-        userDTO.setPassword("password123");
-        userDTO.setRole(Role.CLIENT);
+        String userJson = "{\"username\":\"emailUser1\",\"email\":\"same@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isCreated());
 
-        UserDTO duplicateDTO = new UserDTO();
-        duplicateDTO.setUsername("emailUser2");
-        duplicateDTO.setEmail("same@example.com");
-        duplicateDTO.setPassword("password123");
-        duplicateDTO.setRole(Role.CLIENT);
+        String duplicateJson = "{\"username\":\"emailUser2\",\"email\":\"same@example.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(duplicateDTO)))
+                .content(duplicateJson))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
     void login_invalidCredentials_throwsUnauthorized() throws Exception {
-        UserDTO userDTO = new UserDTO();
-        userDTO.setUsername("loginTest");
-        userDTO.setEmail("login@test.com");
-        userDTO.setPassword("password123");
-        userDTO.setRole(Role.CLIENT);
+        String userJson = "{\"username\":\"loginTest\",\"email\":\"login@test.com\",\"password\":\"password123\",\"role\":\"CLIENT\"}";
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isCreated());
 
         AuthRequestDTO badLogin = new AuthRequestDTO("loginTest", "wrongpassword");

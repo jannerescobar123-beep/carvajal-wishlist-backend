@@ -47,11 +47,12 @@ class AuthControllerTest {
         UserDTO userDTO = new UserDTO(null, "testuser", "test@example.com", "password", Role.CLIENT);
         AuthResponseDTO responseDTO = new AuthResponseDTO("fake-jwt-token", "testuser", Role.CLIENT);
 
+        String userJson = "{\"username\":\"testuser\",\"email\":\"test@example.com\",\"password\":\"password\",\"role\":\"CLIENT\"}";
         when(authService.register(any(UserDTO.class))).thenReturn(responseDTO);
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.token").value("fake-jwt-token"));
     }
@@ -59,11 +60,12 @@ class AuthControllerTest {
     @Test
     void testRegister_UsernameAlreadyExists() throws Exception {
         UserDTO userDTO = new UserDTO(null, "testuser", "test@example.com", "password", Role.CLIENT);
+        String userJson = "{\"username\":\"testuser\",\"email\":\"test@example.com\",\"password\":\"password\",\"role\":\"CLIENT\"}";
         when(authService.register(any(UserDTO.class))).thenThrow(new UsernameAlreadyExistsException("Username exists"));
 
         mockMvc.perform(post("/api/auth/register")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(userDTO)))
+                .content(userJson))
                 .andExpect(status().isBadRequest());
     }
 
