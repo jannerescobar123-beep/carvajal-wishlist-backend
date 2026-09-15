@@ -130,9 +130,9 @@ Todos los errores de negocio (400, 401, 403, 404, 409) son interceptados globalm
 ```
 
 ### 5. Configuración de CORS
-El backend autoriza por defecto el origen de Angular (`http://localhost:4200`). Para entornos alternativos (React 3000 / Vite 5173), definir la variable de entorno:
+El backend autoriza por defecto el origen de Angular local (`http://localhost:4200`) y el despliegue en Vercel (`https://carvajal-frontend-m.vercel.app`). Para orígenes adicionales o alternativos (ej. React 3000 / Vite 5173), definir la variable de entorno separando por comas:
 ```bash
-export CORS_ALLOWED_ORIGIN="http://localhost:4200"
+export CORS_ALLOWED_ORIGIN="http://localhost:4200,https://carvajal-frontend-m.vercel.app,http://localhost:3000"
 ```
 
 ---
